@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+src_root="$HOME/src"
 
 updated=0
 added=0
@@ -47,27 +48,53 @@ refresh_one() {
   updated=$((updated + 1))
 }
 
-refresh_one "/Users/alexy/src/bythebay/cdx/meetup-graph-codex/docs/meetup-graph-codex-book.pdf" "meetup-graph-codex/meetup-graph-codex-book.pdf"
-refresh_one "/Users/alexy/src/bythebay/cdx/meetup-graph-codex/docs/rust-graph-loader-book.pdf" "meetup-graph-codex/rust-graph-loader-book.pdf"
-refresh_one "/Users/alexy/src/bythebay/cdx/meetup-graph-codex/docs/meetup-graph-codex-book.epub" "meetup-graph-codex/meetup-graph-codex-book.epub"
-refresh_one "/Users/alexy/src/bythebay/cdx/meetup-graph-codex/docs/meetup-graph-codex-book.mobi" "meetup-graph-codex/meetup-graph-codex-book.mobi"
+refresh_prefixed_formats() {
+  local src_dir="$1"
+  local dest_dir="$2"
+  local prefix="$3"
+  local ext
 
-refresh_one "/Users/alexy/src/books/sail-rust-book/sail-rust-book/book/sail-rust-arrow-datafusion-book.pdf" "sail-rust-book/sail-rust-arrow-datafusion-book.pdf"
-refresh_one "/Users/alexy/src/books/sail-rust-book/sail-rust-book/book/sail-rust-arrow-datafusion-book.epub" "sail-rust-book/sail-rust-arrow-datafusion-book.epub"
-refresh_one "/Users/alexy/src/books/sail-rust-book/sail-rust-book/book/sail-rust-arrow-datafusion-book.mobi" "sail-rust-book/sail-rust-arrow-datafusion-book.mobi"
+  for ext in pdf epub mobi; do
+    refresh_one "$src_dir/$prefix.$ext" "$dest_dir/$prefix.$ext"
+  done
+}
 
-refresh_one "/Users/alexy/src/books/rio-grande/book/historia_riograndense_brasil-alexy.pdf" "rio-grande/historia_riograndense_brasil-alexy.pdf"
-refresh_one "/Users/alexy/src/books/rio-grande/book/historia_riograndense_brasil.pdf" "rio-grande/historia_riograndense_brasil.pdf"
-refresh_one "/Users/alexy/src/books/rio-grande/book/historia_riograndense_brasil-alexy.epub" "rio-grande/historia_riograndense_brasil-alexy.epub"
-refresh_one "/Users/alexy/src/books/rio-grande/book/historia_riograndense_brasil-alexy.mobi" "rio-grande/historia_riograndense_brasil-alexy.mobi"
+refresh_named() {
+  local src_dir="$1"
+  local dest_dir="$2"
+  local filename="$3"
 
-refresh_one "/Users/alexy/src/grust/book/build/dist/grust-book.pdf" "grust/grust-book.pdf"
-refresh_one "/Users/alexy/src/grust/book/build/dist/grust-book.epub" "grust/grust-book.epub"
-refresh_one "/Users/alexy/src/grust/book/build/dist/grust-book.mobi" "grust/grust-book.mobi"
+  refresh_one "$src_dir/$filename" "$dest_dir/$filename"
+}
 
-refresh_one "/Users/alexy/src/typesec/book/dist/typesec.pdf" "typesec/typesec.pdf"
-refresh_one "/Users/alexy/src/typesec/book/dist/typesec.epub" "typesec/typesec.epub"
-refresh_one "/Users/alexy/src/typesec/book/dist/typesec.mobi" "typesec/typesec.mobi"
+meetup_src_dir="$src_root/bythebay/cdx/meetup-graph-codex/docs"
+meetup_dest_dir="meetup-graph-codex"
+meetup_prefix="meetup-graph-codex-book"
+meetup_legacy_prefix="rust-graph-loader-book"
+refresh_prefixed_formats "$meetup_src_dir" "$meetup_dest_dir" "$meetup_prefix"
+refresh_named "$meetup_src_dir" "$meetup_dest_dir" "$meetup_legacy_prefix.pdf"
+
+sail_src_dir="$src_root/books/sail-rust-book/sail-rust-book/book"
+sail_dest_dir="sail-rust-book"
+sail_prefix="sail-rust-arrow-datafusion-book"
+refresh_prefixed_formats "$sail_src_dir" "$sail_dest_dir" "$sail_prefix"
+
+rio_src_dir="$src_root/books/rio-grande/book"
+rio_dest_dir="rio-grande"
+rio_prefix="historia_riograndense_brasil-alexy"
+rio_original_prefix="historia_riograndense_brasil"
+refresh_prefixed_formats "$rio_src_dir" "$rio_dest_dir" "$rio_prefix"
+refresh_named "$rio_src_dir" "$rio_dest_dir" "$rio_original_prefix.pdf"
+
+grust_src_dir="$src_root/grust/book/build/dist"
+grust_dest_dir="grust"
+grust_prefix="grust-book"
+refresh_prefixed_formats "$grust_src_dir" "$grust_dest_dir" "$grust_prefix"
+
+typesec_src_dir="$src_root/typesec/book/dist"
+typesec_dest_dir="typesec"
+typesec_prefix="typesec"
+refresh_prefixed_formats "$typesec_src_dir" "$typesec_dest_dir" "$typesec_prefix"
 
 printf '\nsummary: %d updated, %d added, %d relinked, %d unchanged\n' \
   "$updated" "$added" "$relinked" "$unchanged"
