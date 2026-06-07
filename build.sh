@@ -14,9 +14,17 @@ file_id() {
   stat -f '%d:%i' "$1"
 }
 
+git_file_changed() {
+  local rel="$1"
+
+  git -C "$repo_dir" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1 || return 1
+  ! git -C "$repo_dir" diff --quiet -- "$rel"
+}
+
 refresh_one() {
   local src="$1"
   local dest="$repo_dir/$2"
+  local rel="$2"
 
   if [[ ! -f "$src" ]]; then
     printf 'missing source: %s\n' "$src" >&2
@@ -34,18 +42,23 @@ refresh_one() {
 
   if cmp -s "$src" "$dest"; then
     if [[ "$(file_id "$src")" == "$(file_id "$dest")" ]]; then
-      printf 'same    %s\n' "${dest#$repo_dir/}"
-      unchanged=$((unchanged + 1))
+      if git_file_changed "$rel"; then
+        printf 'updated %s\n' "$rel"
+        updated=$((updated + 1))
+      else
+        printf 'same    %s\n' "$rel"
+        unchanged=$((unchanged + 1))
+      fi
     else
       ln -f "$src" "$dest"
-      printf 'relink  %s\n' "${dest#$repo_dir/}"
+      printf 'relink  %s\n' "$rel"
       relinked=$((relinked + 1))
     fi
     return
   fi
 
   ln -f "$src" "$dest"
-  printf 'updated %s\n' "${dest#$repo_dir/}"
+  printf 'updated %s\n' "$rel"
   updated=$((updated + 1))
 }
 
