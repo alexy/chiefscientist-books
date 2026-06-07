@@ -14,16 +14,17 @@ formats for that book:
 - `meetup-graph-codex/`
 - `sail-rust-book/`
 - `rio-grande/`
+- `grust/`
+- `typesec/`
 
 ## Assembly Process
 
 1. Rebuild the source book in its own project repository.
 2. Verify the regenerated PDF, EPUB, and MOBI in the source repository.
-3. Copy only final distributable files into the matching directory here.
+3. Hard-link only final distributable files into the matching directory here.
 4. Keep filenames stable across releases unless the book itself is renamed.
-5. Update `manifest.tsv` with the source repository, copied filenames, and date.
+5. Update `manifest.tsv` with the source repository, linked filenames, and date.
 6. Commit and push this archive repository.
 
 This repo should not contain manuscript sources, build scripts, generated
 intermediate files, or scratch exports. Those stay in the source projects.
-

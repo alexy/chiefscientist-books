@@ -1,5 +1,6 @@
 book	source_repo	pdf	epub	mobi	updated
-meetup-graph-codex	/Users/alexy/src/bythebay/cdx/meetup-graph-codex				TBD
-sail-rust-book	/Users/alexy/src/books/sail-rust-book				TBD
-rio-grande	/Users/alexy/src/books/rio-grande				TBD
-
+meetup-graph-codex	/Users/alexy/src/bythebay/cdx/meetup-graph-codex	meetup-graph-codex-book.pdf; rust-graph-loader-book.pdf	meetup-graph-codex-book.epub	meetup-graph-codex-book.mobi	2026-06-07
+sail-rust-book	/Users/alexy/src/books/sail-rust-book	sail-rust-arrow-datafusion-book.pdf	sail-rust-arrow-datafusion-book.epub	sail-rust-arrow-datafusion-book.mobi	2026-06-07
+rio-grande	/Users/alexy/src/books/rio-grande	historia_riograndense_brasil-alexy.pdf; historia_riograndense_brasil.pdf	historia_riograndense_brasil-alexy.epub	historia_riograndense_brasil-alexy.mobi	2026-06-07
+grust	/Users/alexy/src/grust	grust-book.pdf	grust-book.epub	grust-book.mobi	2026-06-07
+typesec	/Users/alexy/src/typesec	typesec.pdf	typesec.epub	typesec.mobi	2026-06-07
