@@ -21,10 +21,15 @@ formats for that book:
 
 1. Rebuild the source book in its own project repository.
 2. Verify the regenerated PDF, EPUB, and MOBI in the source repository.
-3. Hard-link only final distributable files into the matching directory here.
+3. Run `./build.sh` from this repository to refresh hard links for changed artifacts.
 4. Keep filenames stable across releases unless the book itself is renamed.
 5. Update `manifest.tsv` with the source repository, linked filenames, and date.
 6. Commit and push this archive repository.
 
-This repo should not contain manuscript sources, build scripts, generated
-intermediate files, or scratch exports. Those stay in the source projects.
+`build.sh` compares each source artifact with its archived copy. It only changes
+archive contents when the source file changed, and it also refreshes hard links
+when a generator rewrote an identical file at a new inode.
+
+This repo should not contain manuscript sources, source-project build scripts,
+generated intermediate files, or scratch exports. Those stay in the source
+projects.
