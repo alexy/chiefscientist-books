@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 set -euo pipefail
 
-repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_dir="$(cd "$(dirname "$0")" && pwd)"
 src_root="$HOME/src"
+formats=(pdf epub mobi)
 
 updated=0
 added=0
@@ -48,53 +49,44 @@ refresh_one() {
   updated=$((updated + 1))
 }
 
-refresh_prefixed_formats() {
-  local src_dir="$1"
-  local dest_dir="$2"
+book() {
+  local dest_dir="$1"
+  local src_dir="$2"
   local prefix="$3"
-  local ext
+  shift 3
 
-  for ext in pdf epub mobi; do
+  local ext extra
+
+  for ext in "${formats[@]}"; do
     refresh_one "$src_dir/$prefix.$ext" "$dest_dir/$prefix.$ext"
+  done
+
+  for extra in "$@"; do
+    refresh_one "$src_dir/$extra" "$dest_dir/$extra"
   done
 }
 
-refresh_named() {
-  local src_dir="$1"
-  local dest_dir="$2"
-  local filename="$3"
+book "meetup-graph-codex" \
+  "$src_root/bythebay/cdx/meetup-graph-codex/docs" \
+  "meetup-graph-codex-book" \
+  "rust-graph-loader-book.pdf"
 
-  refresh_one "$src_dir/$filename" "$dest_dir/$filename"
-}
+book "sail-rust-book" \
+  "$src_root/books/sail-rust-book/sail-rust-book/book" \
+  "sail-rust-arrow-datafusion-book"
 
-meetup_src_dir="$src_root/bythebay/cdx/meetup-graph-codex/docs"
-meetup_dest_dir="meetup-graph-codex"
-meetup_prefix="meetup-graph-codex-book"
-meetup_legacy_prefix="rust-graph-loader-book"
-refresh_prefixed_formats "$meetup_src_dir" "$meetup_dest_dir" "$meetup_prefix"
-refresh_named "$meetup_src_dir" "$meetup_dest_dir" "$meetup_legacy_prefix.pdf"
+book "rio-grande" \
+  "$src_root/books/rio-grande/book" \
+  "historia_riograndense_brasil-alexy" \
+  "historia_riograndense_brasil.pdf"
 
-sail_src_dir="$src_root/books/sail-rust-book/sail-rust-book/book"
-sail_dest_dir="sail-rust-book"
-sail_prefix="sail-rust-arrow-datafusion-book"
-refresh_prefixed_formats "$sail_src_dir" "$sail_dest_dir" "$sail_prefix"
+book "grust" \
+  "$src_root/grust/book/build/dist" \
+  "grust-book"
 
-rio_src_dir="$src_root/books/rio-grande/book"
-rio_dest_dir="rio-grande"
-rio_prefix="historia_riograndense_brasil-alexy"
-rio_original_prefix="historia_riograndense_brasil"
-refresh_prefixed_formats "$rio_src_dir" "$rio_dest_dir" "$rio_prefix"
-refresh_named "$rio_src_dir" "$rio_dest_dir" "$rio_original_prefix.pdf"
-
-grust_src_dir="$src_root/grust/book/build/dist"
-grust_dest_dir="grust"
-grust_prefix="grust-book"
-refresh_prefixed_formats "$grust_src_dir" "$grust_dest_dir" "$grust_prefix"
-
-typesec_src_dir="$src_root/typesec/book/dist"
-typesec_dest_dir="typesec"
-typesec_prefix="typesec"
-refresh_prefixed_formats "$typesec_src_dir" "$typesec_dest_dir" "$typesec_prefix"
+book "typesec" \
+  "$src_root/typesec/book/dist" \
+  "typesec"
 
 printf '\nsummary: %d updated, %d added, %d relinked, %d unchanged\n' \
   "$updated" "$added" "$relinked" "$unchanged"
