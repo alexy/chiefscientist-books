@@ -4,14 +4,52 @@ set -euo pipefail
 repo_dir="$(cd "$(dirname "$0")" && pwd)"
 src_root="$HOME/src"
 formats=(pdf epub mobi)
+push_after_refresh=0
 
 updated=0
 added=0
 relinked=0
 unchanged=0
+detected_paths=()
+
+usage() {
+  cat <<'EOF'
+usage: ./refre.sh [--push]
+
+Refresh archived book artifacts from their source repositories.
+
+Options:
+  --push    commit and push the artifact updates detected by this run
+  -h, --help
+            show this help
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --push)
+      push_after_refresh=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'unknown option: %s\n\n' "$arg" >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+done
 
 file_id() {
   stat -f '%d:%i' "$1"
+}
+
+record_detected() {
+  local rel="$1"
+
+  detected_paths+=("$rel")
 }
 
 git_file_changed() {
@@ -36,6 +74,7 @@ refresh_one() {
   if [[ ! -e "$dest" ]]; then
     ln -f "$src" "$dest"
     printf 'added   %s\n' "${dest#$repo_dir/}"
+    record_detected "$rel"
     added=$((added + 1))
     return
   fi
@@ -44,6 +83,7 @@ refresh_one() {
     if [[ "$(file_id "$src")" == "$(file_id "$dest")" ]]; then
       if git_file_changed "$rel"; then
         printf 'updated %s\n' "$rel"
+        record_detected "$rel"
         updated=$((updated + 1))
       else
         printf 'same    %s\n' "$rel"
@@ -52,6 +92,7 @@ refresh_one() {
     else
       ln -f "$src" "$dest"
       printf 'relink  %s\n' "$rel"
+      record_detected "$rel"
       relinked=$((relinked + 1))
     fi
     return
@@ -59,7 +100,27 @@ refresh_one() {
 
   ln -f "$src" "$dest"
   printf 'updated %s\n' "$rel"
+  record_detected "$rel"
   updated=$((updated + 1))
+}
+
+push_changes() {
+  if (( ${#detected_paths[@]} == 0 )); then
+    printf '\nno detected artifact updates to commit\n'
+    return
+  fi
+
+  git -C "$repo_dir" add -- "${detected_paths[@]}"
+
+  if git -C "$repo_dir" diff --cached --quiet -- "${detected_paths[@]}"; then
+    printf '\ndetected artifact paths had no commit-worthy content changes\n'
+    return
+  fi
+
+  git -C "$repo_dir" commit \
+    -m "Refresh book archive artifacts" \
+    -m "Updated: $updated; added: $added; relinked: $relinked; unchanged: $unchanged."
+  git -C "$repo_dir" push
 }
 
 book() {
@@ -103,3 +164,7 @@ book "typesec" \
 
 printf '\nsummary: %d updated, %d added, %d relinked, %d unchanged\n' \
   "$updated" "$added" "$relinked" "$unchanged"
+
+if (( push_after_refresh )); then
+  push_changes
+fi
