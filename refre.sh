@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_dir="$(cd "$(dirname "$0")" && pwd)"
 src_root="$HOME/src"
+book_source_root="$HOME/src/book-sources"
 formats=(pdf epub mobi)
 push_after_refresh=0
 
@@ -123,21 +124,31 @@ push_changes() {
   git -C "$repo_dir" push
 }
 
+book_with_prefixes() {
+  local dest_dir="$1"
+  local src_dir="$2"
+  local dest_prefix="$3"
+  local src_prefix="$4"
+  shift 4
+
+  local ext extra
+
+  for ext in "${formats[@]}"; do
+    refresh_one "$src_dir/$src_prefix.$ext" "$dest_dir/$dest_prefix.$ext"
+  done
+
+  for extra in "$@"; do
+    refresh_one "$src_dir/$extra" "$dest_dir/$extra"
+  done
+}
+
 book() {
   local dest_dir="$1"
   local src_dir="$2"
   local prefix="$3"
   shift 3
 
-  local ext extra
-
-  for ext in "${formats[@]}"; do
-    refresh_one "$src_dir/$prefix.$ext" "$dest_dir/$prefix.$ext"
-  done
-
-  for extra in "$@"; do
-    refresh_one "$src_dir/$extra" "$dest_dir/$extra"
-  done
+  book_with_prefixes "$dest_dir" "$src_dir" "$prefix" "$prefix" "$@"
 }
 
 book "meetup-graph-codex" \
@@ -146,20 +157,21 @@ book "meetup-graph-codex" \
   "rust-graph-loader-book.pdf"
 
 book "sail-rust-book" \
-  "$src_root/books/sail-rust-book/sail-rust-book/book" \
+  "$book_source_root/sail-rust-book/sail-rust-book/book" \
   "sail-rust-arrow-datafusion-book"
 
 book "rio-grande" \
-  "$src_root/books/rio-grande/book" \
+  "$book_source_root/rio-grande-history/rio-grande/book" \
   "historia_riograndense_brasil-alexy" \
   "historia_riograndense_brasil.pdf"
 
-book "grust" \
-  "$src_root/grust/book/build/dist" \
-  "grust-book"
+book_with_prefixes "grust" \
+  "$src_root/grust/docs/book/build/dist" \
+  "grust-book" \
+  "grust"
 
 book "typesec" \
-  "$src_root/typesec/book/dist" \
+  "$src_root/typesec/docs/book/dist" \
   "typesec"
 
 printf '\nsummary: %d updated, %d added, %d relinked, %d unchanged\n' \

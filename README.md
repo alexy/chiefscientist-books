@@ -1,4 +1,4 @@
-# Chief Scientist Books
+# Books
 
 This repository is the final-copy archive for completed book builds.
 
