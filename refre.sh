@@ -11,6 +11,8 @@ updated=0
 added=0
 relinked=0
 unchanged=0
+published=0
+publish_unchanged=0
 detected_paths=()
 
 usage() {
@@ -58,6 +60,76 @@ git_file_changed() {
 
   git -C "$repo_dir" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1 || return 1
   ! git -C "$repo_dir" diff --quiet -- "$rel" || ! git -C "$repo_dir" diff --cached --quiet -- "$rel"
+}
+
+version_field() {
+  local version_file="$1"
+  local field="$2"
+
+  awk -v field="$field" '
+    $0 ~ "^[[:space:]]*" field "[[:space:]]*:" {
+      sub("^[[:space:]]*" field "[[:space:]]*:[[:space:]]*", "")
+      print
+      exit
+    }
+  ' "$version_file"
+}
+
+publish_versioned_epub() {
+  local src_dir="$1"
+  local src_prefix="$2"
+  local version_file="$src_dir/VERSION.md"
+
+  [[ -f "$version_file" ]] || return 0
+
+  local epub_file
+  local kindle_link
+  local kindle_name
+  local publish_src
+  local publish_dest
+
+  epub_file="$(version_field "$version_file" "epub_file")"
+  kindle_link="$(version_field "$version_file" "kindle_link")"
+
+  if [[ -z "$epub_file" ]]; then
+    epub_file="$src_prefix.epub"
+  fi
+
+  if [[ -z "$kindle_link" ]]; then
+    kindle_name="$(version_field "$version_file" "kindle_name")"
+    [[ -n "$kindle_name" ]] || return 0
+    kindle_link="$kindle_name.epub"
+  fi
+
+  if [[ -e "$src_dir/$kindle_link" ]]; then
+    publish_src="$src_dir/$kindle_link"
+  else
+    publish_src="$src_dir/$epub_file"
+  fi
+
+  if [[ ! -f "$publish_src" ]]; then
+    printf 'missing publish source: %s\n' "$publish_src" >&2
+    return 1
+  fi
+
+  publish_dest="$HOME/icloud/ebooks/$kindle_link"
+  mkdir -p "$(dirname "$publish_dest")"
+
+  if [[ -f "$publish_dest" ]] && cmp -s "$publish_src" "$publish_dest"; then
+    printf 'icloud  same    %s\n' "$kindle_link"
+    publish_unchanged=$((publish_unchanged + 1))
+    return
+  fi
+
+  cp "$publish_src" "$publish_dest"
+
+  if ! cmp -s "$publish_src" "$publish_dest"; then
+    printf 'icloud copy failed verification: %s\n' "$publish_dest" >&2
+    return 1
+  fi
+
+  printf 'icloud  copied  %s\n' "$kindle_link"
+  published=$((published + 1))
 }
 
 refresh_one() {
@@ -140,6 +212,8 @@ book_with_prefixes() {
   for extra in "$@"; do
     refresh_one "$src_dir/$extra" "$dest_dir/$extra"
   done
+
+  publish_versioned_epub "$src_dir" "$src_prefix"
 }
 
 book() {
@@ -175,6 +249,8 @@ book "typesec" \
 
 printf '\nsummary: %d updated, %d added, %d relinked, %d unchanged\n' \
   "$updated" "$added" "$relinked" "$unchanged"
+printf 'icloud: %d copied, %d already current\n' \
+  "$published" "$publish_unchanged"
 
 if (( push_after_refresh )); then
   push_changes
