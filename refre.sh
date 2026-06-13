@@ -112,11 +112,11 @@ publish_versioned_epub() {
     return 1
   fi
 
-  publish_dest="$HOME/icloud/ebooks/$kindle_link"
+  publish_dest="$HOME/icloud/books/$kindle_link"
   mkdir -p "$(dirname "$publish_dest")"
 
   if [[ -f "$publish_dest" ]] && cmp -s "$publish_src" "$publish_dest"; then
-    printf 'icloud  same    %s\n' "$kindle_link"
+    printf 'icloud  same    %s\n' "$publish_dest"
     publish_unchanged=$((publish_unchanged + 1))
     return
   fi
@@ -128,7 +128,7 @@ publish_versioned_epub() {
     return 1
   fi
 
-  printf 'icloud  copied  %s\n' "$kindle_link"
+  printf 'icloud  copied  %s\n' "$publish_dest"
   published=$((published + 1))
 }
 
