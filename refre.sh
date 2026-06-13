@@ -57,7 +57,7 @@ git_file_changed() {
   local rel="$1"
 
   git -C "$repo_dir" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1 || return 1
-  ! git -C "$repo_dir" diff --quiet -- "$rel"
+  ! git -C "$repo_dir" diff --quiet -- "$rel" || ! git -C "$repo_dir" diff --cached --quiet -- "$rel"
 }
 
 refresh_one() {
@@ -161,13 +161,12 @@ book "sail-rust-book" \
   "sail-rust-arrow-datafusion-book"
 
 book "rio-grande" \
-  "$book_source_root/rio-grande-history/rio-grande/book" \
+  "$HOME/books/rio-grande/book" \
   "historia_riograndense_brasil-alexy" \
   "historia_riograndense_brasil.pdf"
 
-book_with_prefixes "grust" \
+book "grust" \
   "$src_root/grust/docs/book/build/dist" \
-  "grust-book" \
   "grust"
 
 book "typesec" \
