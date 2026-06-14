@@ -247,6 +247,10 @@ book "typesec" \
   "$src_root/typesec/docs/book/dist" \
   "typesec"
 
+book "querygraph" \
+  "$src_root/querygraph/qg-rust/docs/book/dist" \
+  "querygraph"
+
 printf '\nsummary: %d updated, %d added, %d relinked, %d unchanged\n' \
   "$updated" "$added" "$relinked" "$unchanged"
 printf 'icloud: %d copied, %d already current\n' \

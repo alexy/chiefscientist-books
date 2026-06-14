@@ -16,6 +16,7 @@ formats for that book:
 - `rio-grande/`
 - `grust/`
 - `typesec/`
+- `querygraph/`
 
 ## Assembly Process
 
